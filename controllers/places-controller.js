@@ -1,7 +1,8 @@
 const uuid = require("uuid/v4");
+const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 
-const PLACES = [
+let PLACES = [
   {
     id: "p1",
     title: "Empire State",
@@ -35,21 +36,26 @@ const getPlaceById = (req, res, next) => {
   });
 };
 
-const getPlaceByUserId = (req, res, next) => {
+const getPlacesByUserId = (req, res, next) => {
   const { userId } = req.params;
-  const place = PLACES.find(p => p.creator === userId);
-  if (!place) {
-    if (!place) {
-      return next(new HttpError("Could not find place for that user id", 404));
-    }
+  const places = PLACES.filter(p => p.creator === userId);
+
+  if (!places || places.length === 0) {
+    return next(new HttpError("Could not find places for that user id", 404));
   }
 
   res.json({
-    place
+    places
   });
 };
 
 const addPlace = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    throw new HttpError("Invalid input data", 422);
+  }
+
   const { title, description, coordinates, address, creator } = req.body;
   const place = {
     id: uuid(),
@@ -66,7 +72,43 @@ const addPlace = (req, res, next) => {
   });
 };
 
+const updatePlace = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    throw new HttpError("Invalid input data", 422);
+  }
+
+  const { title, description } = req.body;
+  const { placeId } = req.params;
+
+  const place = { ...PLACES.find(p => p.id === placeId) };
+  const placeIndex = PLACES.findIndex(p => p.id === placeId);
+  place.title = title;
+  place.description = description;
+  PLACES[placeIndex] = place;
+
+  res.status(200).json({
+    place
+  });
+};
+
+const deletePlace = (req, res, next) => {
+  const { placeId } = req.params;
+  if (!PLACES.find(p => p.id === placeId)) {
+    throw new HttpError("Could not find Place", 404);
+  }
+
+  PLACES = PLACES.filter(p => p.id === placeId);
+
+  res.status(200).json({
+    message: "Place deleted!"
+  });
+};
+
 exports.getPlaceById = getPlaceById;
 exports.getAllPlaces = getAllPlaces;
-exports.getPlaceByUserId = getPlaceByUserId;
+exports.getPlacesByUserId = getPlacesByUserId;
 exports.addPlace = addPlace;
+exports.updatePlace = updatePlace;
+exports.deletePlace = deletePlace;
