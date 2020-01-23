@@ -1,6 +1,7 @@
 const uuid = require("uuid/v4");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
+const User = require("../models/user");
 
 const USERS = [
   {
@@ -11,51 +12,76 @@ const USERS = [
   }
 ];
 
-const getUsers = (req, res, next) => {
+const getUsers = async (req, res, next) => {
+  let users = [];
+  try {
+    users = await User.find({}, "-password");
+  } catch (e) {
+    return next(new HttpError("Something went wrong", 500));
+  }
+
   res.status(200).json({
-    users: USERS
+    users: users.map(user => user.toObject({ getters: true }))
   });
 };
 
-const signup = (req, res, next) => {
+const signup = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    throw new HttpError("Invalid input data", 422);
+    return next(new HttpError("Invalid input data", 422));
   }
 
   const { name, email, password } = req.body;
+  let existingUser;
 
-  const hasUser = USERS.find(u => u.email === email);
-
-  if (hasUser) {
-    throw new HttpError("User Exists", 422);
+  try {
+    existingUser = await User.findOne({ email });
+  } catch (err) {
+    return next(new HttpError("Something went wrong", 500));
   }
 
-  const user = {
-    id: uuid(),
+  if (existingUser) {
+    return next(new HttpError("User exists with that email", 422));
+  }
+
+  const user = new User({
     name,
     email,
-    password
-  };
+    password,
+    image: "http://img2.rtve.es/v/4706369?w=1600&preview=1535139974809.jpg",
+    places: "dddd"
+  });
 
-  USERS.push(user);
+  try {
+    await user.save();
+  } catch (e) {
+    console.log(e);
+    return next(new HttpError("Unable to create user, please try again", 500));
+  }
+
   res.status(201).json({
-    user
+    user: user.toObject({ getters: true })
   });
 };
 
-const login = (req, res, next) => {
+const login = async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = USERS.find(u => u.email === email && u.password === password);
+  let existingUser;
 
-  if (!user) {
-    throw new HttpError("Unable to identify user", 401);
+  try {
+    existingUser = await User.findOne({ email });
+  } catch (err) {
+    return next(new HttpError("Something went wrong", 500));
+  }
+
+  if (!existingUser || existingUser.password !== password) {
+    return next(new HttpError("Invalid email or password", 401));
   }
 
   res.json({
-    user
+    user: existingUser.toObject({ getters: true })
   });
 };
 
