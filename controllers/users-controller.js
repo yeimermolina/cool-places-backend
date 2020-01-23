@@ -50,7 +50,7 @@ const signup = async (req, res, next) => {
     email,
     password,
     image: "http://img2.rtve.es/v/4706369?w=1600&preview=1535139974809.jpg",
-    places: "dddd"
+    places: []
   });
 
   try {

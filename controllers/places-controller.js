@@ -1,27 +1,20 @@
-const uuid = require("uuid/v4");
+const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const getCoordsFromAddress = require("../utils/location");
 const Place = require("../models/place");
+const User = require("../models/user");
 
-let PLACES = [
-  {
-    id: "p1",
-    title: "Empire State",
-    description: "Empire State",
-    location: {
-      lat: 40.7482,
-      lng: -73.98
-    },
-    address: "20 west av",
-    creator: "u1"
+const getAllPlaces = async (req, res, next) => {
+  let places = [];
+  try {
+    places = await Place.find();
+  } catch (e) {
+    return next(new HttpError("Something went wrong", 500));
   }
-];
 
-const getAllPlaces = (req, res, next) => {
-  console.log("Get request");
-  res.json({
-    places: PLACES
+  res.status(200).json({
+    places: places.map(place => place.toObject({ getters: true }))
   });
 };
 
@@ -87,9 +80,27 @@ const addPlace = async (req, res, next) => {
     creator
   });
 
+  let user;
+
   try {
-    place.save();
+    user = await User.findById(creator);
   } catch (e) {
+    return next(new HttpError("Something went wrong", 500));
+  }
+
+  if (!user) {
+    return next(new HttpError("User does not exists", 500));
+  }
+
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await place.save({ session });
+    user.places.push(place);
+    await user.save({ session });
+    session.commitTransaction();
+  } catch (e) {
+    console.log(e);
     return next(new HttpError("Unable to create place, please try again", 500));
   }
 

@@ -30,7 +30,9 @@ app.use((error, req, res, next) => {
 });
 
 mongoose
-  .connect("mongodb://yeimer:Asdf123!@ds211829.mlab.com:11829/places_backend")
+  .connect(
+    "mongodb+srv://yeimer:Asdf123!@cluster0-78rjv.mongodb.net/places_backend?retryWrites=true&w=majority"
+  )
   .then(() => {
     console.log("Running App on Port 5000");
     app.listen(5000);

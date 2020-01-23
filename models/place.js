@@ -1,4 +1,4 @@
-const { Schema, model } = require("mongoose");
+const { Schema, model, Types } = require("mongoose");
 
 const placeSchema = new Schema({
   title: {
@@ -22,8 +22,9 @@ const placeSchema = new Schema({
     lng: { type: Number, required: true }
   },
   creator: {
-    type: String,
-    required: true
+    type: Types.ObjectId,
+    required: true,
+    ref: "User"
   }
 });
 
