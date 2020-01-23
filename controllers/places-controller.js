@@ -98,7 +98,7 @@ const addPlace = async (req, res, next) => {
     await place.save({ session });
     user.places.push(place);
     await user.save({ session });
-    session.commitTransaction();
+    await session.commitTransaction();
   } catch (e) {
     console.log(e);
     return next(new HttpError("Unable to create place, please try again", 500));
@@ -149,7 +149,7 @@ const deletePlace = async (req, res, next) => {
   let place;
 
   try {
-    place = await Place.findById(placeId);
+    place = await Place.findById(placeId).populate("creator");
   } catch (err) {
     next(new HttpError("Something went wrong", 500));
   }
@@ -159,7 +159,12 @@ const deletePlace = async (req, res, next) => {
   }
 
   try {
-    await place.remove();
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await place.remove({ session });
+    place.creator.places.pull(place);
+    await place.creator.save({ session });
+    await session.commitTransaction();
   } catch (err) {
     next(new HttpError("Something went wrong", 500));
   }
