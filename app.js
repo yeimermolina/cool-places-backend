@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 
 const placesRoutes = require("./routes/places-routes");
 const usersRoutes = require("./routes/users-routes");
@@ -28,4 +29,12 @@ app.use((error, req, res, next) => {
   });
 });
 
-app.listen(5000);
+mongoose
+  .connect("mongodb://yeimer:Asdf123!@ds211829.mlab.com:11829/places_backend")
+  .then(() => {
+    console.log("Running App on Port 5000");
+    app.listen(5000);
+  })
+  .catch(e => {
+    console.log(e);
+  });
