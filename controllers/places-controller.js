@@ -47,7 +47,7 @@ const getPlacesByUserId = async (req, res, next) => {
     return next(new HttpError("Something went wrong", 500));
   }
 
-  if (!places || places.length === 0) {
+  if (!places) {
     return next(new HttpError("There are no places for this user", 404));
   }
 
