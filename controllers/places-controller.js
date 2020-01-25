@@ -1,3 +1,4 @@
+const fs = require("fs");
 const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
@@ -76,7 +77,7 @@ const addPlace = async (req, res, next) => {
     description,
     address,
     location: coordinates,
-    image: "http://img2.rtve.es/v/4706369?w=1600&preview=1535139974809.jpg",
+    image: req.file.path,
     creator
   });
 
@@ -158,6 +159,8 @@ const deletePlace = async (req, res, next) => {
     next(new HttpError("Could not find Place", 404));
   }
 
+  const imagePath = place.image;
+
   try {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -168,6 +171,10 @@ const deletePlace = async (req, res, next) => {
   } catch (err) {
     next(new HttpError("Something went wrong", 500));
   }
+
+  fs.unlink(imagePath, e => {
+    console.log(e);
+  });
 
   res.status(200).json({
     message: "Place deleted!"
