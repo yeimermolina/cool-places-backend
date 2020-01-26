@@ -12,7 +12,7 @@ const authRequired = (req, res, next) => {
       throw new Error("Auth failed");
     }
 
-    const decodedToken = jwt.verify(token, "MYSECRETCODE");
+    const decodedToken = jwt.verify(token, process.env.PRIVATE_KEY);
     req.user = {
       id: decodedToken.userId
     };

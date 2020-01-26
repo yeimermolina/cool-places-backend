@@ -67,7 +67,7 @@ const signup = async (req, res, next) => {
         userId: user.id,
         email: user.email
       },
-      "MYSECRETCODE",
+      process.env.PRIVATE_KEY,
       {
         expiresIn: "1h"
       }
@@ -118,7 +118,7 @@ const login = async (req, res, next) => {
         userId: existingUser.id,
         email: existingUser.email
       },
-      "MYSECRETCODE",
+      process.env.PRIVATE_KEY,
       {
         expiresIn: "1h"
       }
