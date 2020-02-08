@@ -26,6 +26,13 @@ const userSchema = new Schema({
       required: true,
       ref: "Place"
     }
+  ],
+  events: [
+    {
+      type: Types.ObjectId,
+      required: true,
+      ref: "Event"
+    }
   ]
 });
 

@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 
 const placesRoutes = require("./routes/places-routes");
 const usersRoutes = require("./routes/users-routes");
+const eventsRoutes = require("./routes/events-routes");
 const HttpError = require("./models/http-error");
 
 const app = express();
@@ -27,6 +28,7 @@ app.use((req, res, next) => {
 
 app.use("/api/places", placesRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/events", eventsRoutes);
 
 app.use((req, res, next) => {
   throw new HttpError("Resource not found", 404);
